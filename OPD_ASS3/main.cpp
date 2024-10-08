@@ -27,10 +27,13 @@ public:
     vector<int> getRange() const {
         return range;
     };
+    void setColor(char c) {
+        color = c;
+    }
 
 protected:
     vector<int> coordinates;
-    vector<int> range; //min-x,max-x,min-y,max-y
+    vector<int> range; // max-x,max-y
     char color;
     bool fill;
 };
@@ -347,8 +350,14 @@ struct Board {
         }
     }
 
-    void placeShape(const Figure& shape, int x, int y) {
+    void placeShape(Figure& shape, int x, int y) {
         std::vector<std::vector<char>> shapeGrid = shape.draw();
+
+        vector<int> range;
+        range.push_back(shapeGrid.size() + x);
+        range.push_back(shapeGrid[0].size() + y);
+        shape.setRange(range);
+
         for (int i = 0; i < shapeGrid.size(); ++i) {
             for (int j = 0; j < shapeGrid[i].size(); ++j) {
                 if (shapeGrid[i][j] != ' ' && x + i < BOARD_HEIGHT && y + j < BOARD_WIDTH) {
@@ -376,6 +385,12 @@ struct Board {
         }
 
     }
+    bool checkGrid(int x, int y) {
+        if (grid[x][y] == ' ') {
+            return false;
+        }
+        return true; 
+    }
 
 };
 
@@ -383,6 +398,7 @@ class CLI {
 public:
     Board board;
     vector<shared_ptr<Figure>> Figures;
+    int selected;
 
     void start() {
         while (1) {
@@ -401,6 +417,14 @@ public:
 
             else if (command == "draw") {
                 draw();
+            }
+            else if (command == "select") {
+                if (input.size() == 2) {
+                    select(stoi(input[1]));
+                }
+                else {
+                    select(stoi(input[1]),stoi(input[2]));
+                }
             }
 
             else if (command == "undo") {
@@ -436,8 +460,36 @@ public:
         }
     }
 
+    void select(int x) {
+        if (x >= 0 && x < Figures.size()) {
+            selected = x;
+            list(x);
+        }
+        else {
+            cout << "shape was not found" << endl;
+        }
+        
+    }
 
+    void select(int x, int y) {
+        if (board.checkGrid(x, y)) {
+            int ID = 0;
+            for (auto& fig : Figures) {
+                vector<int> min_pos = fig->positon();
+                vector<int> max_pos = fig->getRange();
+                if (min_pos[0] <= x && x <= max_pos[0] && min_pos[1] <= y && y <= max_pos[1]) {
+                    selected = ID;
+                    list(ID);
+                    return;
+                }
+                ID++;
+            }
+        }
+        else {
+            cout << "shape was not found" << endl;
+        }
 
+    }
 
     void save() {
 
@@ -466,7 +518,7 @@ public:
             Triangle* triangle = dynamic_cast<Triangle*>(fig.get());
             Rectangle* rectangle = dynamic_cast<Rectangle*>(fig.get());
             auto coordinates = fig->positon();
-
+            
             if (circle != nullptr) {
                 cout << "ID " << ID << " Circle radius " << circle->getRadius() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
 
@@ -495,6 +547,43 @@ public:
             ID++;
 
         }
+
+
+    }
+
+    void list(int ID) {
+
+        auto fig = Figures[ID];
+        Circle* circle = dynamic_cast<Circle*>(fig.get());
+        Square* square = dynamic_cast<Square*>(fig.get());
+        Triangle* triangle = dynamic_cast<Triangle*>(fig.get());
+        Rectangle* rectangle = dynamic_cast<Rectangle*>(fig.get());
+        auto coordinates = fig->positon();
+
+        if (circle != nullptr) {
+            cout << "ID " << ID << " Circle radius " << circle->getRadius() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+
+        }
+
+        if (square != nullptr) {
+            if (square->getSide() != 0) {
+                cout << "ID " << ID << " Square side " << square->getSide() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+            }
+            else
+            {
+                cout << "ID " << ID << " Square sides " << square->getSides() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+            }
+
+        }
+        if (triangle != nullptr) {
+            cout << "ID " << ID << " Triangle height " << triangle->getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+
+        }
+        if (rectangle != nullptr) {
+            cout << "ID " << ID << " Rectangle side " << triangle->getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+
+        }
+    
     }
 
     void load() {
@@ -518,7 +607,7 @@ public:
 
 
             for (char c : line) {
-                if (c == ' ' || c == '*') {
+                if (c == ' ' || c == '*') { //change !!!!!!!!
                     row.push_back(c);
                 }
             }
