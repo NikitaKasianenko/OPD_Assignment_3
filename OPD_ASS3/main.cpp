@@ -123,21 +123,42 @@ public:
 
     std::vector<std::vector<char>> draw() const override {
         std::vector<std::vector<char>> triangle(2 * height - 1, std::vector<char>(2 * height - 1, ' '));
+        if (!fill) {
 
-        for (int i = 0; i < height; ++i) {
-            int leftMost = height - 1 - i;
-            int rightMost = height - 1 + i;
-            triangle[i][leftMost] = '*';
-            triangle[i][rightMost] = '*';
+            for (int i = 0; i < height; ++i) {
+                int leftMost = height - 1 - i;
+                int rightMost = height - 1 + i;
+                triangle[i][leftMost] = color;
+                triangle[i][rightMost] = color;
+
+            }
+
+            for (int i = height; i < 2 * height - 1; ++i) {
+                int leftMost = i - height + 1;
+                int rightMost = 3 * height - i - 3;
+                triangle[i][leftMost] = color;
+                triangle[i][rightMost] = color;
+            }
         }
+        else {
+            for (int i = 0; i < height; ++i) {
+                int leftMost = height - 1 - i;
+                int rightMost = height - 1 + i;
+                for (int j = leftMost; j <= rightMost; ++j) {
+                    triangle[i][j] = color;
+                }
 
-        for (int i = height; i < 2 * height - 1; ++i) {
-            int leftMost = i - height + 1;
-            int rightMost = 3 * height - i - 3;
-            triangle[i][leftMost] = '*';
-            triangle[i][rightMost] = '*';
+            }
+
+            for (int i = height; i < 2 * height - 1; ++i) {
+                int leftMost = i - height + 1;
+                int rightMost = 3 * height - i - 3;
+                for (int j = leftMost; j <= rightMost; ++j) {
+                    triangle[i][j] = color;
+                }
+            }
+
         }
-
 
         return triangle;
     }
@@ -183,7 +204,7 @@ public:
                     double distance = sqrt(pow(i * aspect_ratio, 2) + pow(j, 2));
 
                     if (distance >= rad - 0.5 && distance <= rad + 0.5) {
-                        circle[i + rad][j + rad] = '*';
+                        circle[i + rad][j + rad] = color;
                     }
                 }
             }
@@ -195,7 +216,7 @@ public:
                     double distance = sqrt(pow(i * aspect_ratio, 2) + pow(j, 2));
 
                     if (distance <= rad) {  
-                        circle[i + rad][j + rad] = '*';
+                        circle[i + rad][j + rad] = color;
                     }
                 }
             }
