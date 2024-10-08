@@ -18,8 +18,13 @@ public:
     virtual ~Figure() = default;
     virtual bool operator==(const Figure& other) const = 0;
 
-    vector<int> positon() const {
+    vector<int> getPositon() const {
         return coordinates;
+    };
+
+    void setPositon(int x,int y){
+        coordinates[0] = x;
+        coordinates[1] = y;
     };
     void setRange(vector<int> r) {
         range = r;
@@ -385,6 +390,13 @@ struct Board {
         }
         return true; 
     }
+    bool checkPos(int x, int y) {
+        if (x < BOARD_HEIGHT && y< BOARD_WIDTH) {
+            return true;
+        }
+        return false;
+
+    }
 
 };
 
@@ -433,6 +445,9 @@ public:
             else if (command == "paint") {
                 paint(input[1][0]);
             }
+            else if (command == "move") {
+                move(stoi(input[1]),stoi(input[2]));
+            }
 
             else if (command == "clear") {
                 clear();
@@ -475,7 +490,7 @@ public:
         if (board.checkGrid(x, y)) {
             int ID = 0;
             for (auto& fig : Figures) {
-                vector<int> min_pos = fig->positon();
+                vector<int> min_pos = fig->getPositon();
                 vector<int> max_pos = fig->getRange();
                 if (min_pos[0] <= x && x <= max_pos[0] && min_pos[1] <= y && y <= max_pos[1]) {
                     selected = ID;
@@ -498,17 +513,35 @@ public:
                 Figures.erase(Figures.begin() + selected);
             }
 
-        }  
+        }
         else {
             cout << "You dont select shape" << endl;
         }
     }
+
+    
+
     void paint(char color) {
         if (selected != -1) {
             if (selected >= 0 && selected < Figures.size()) {
                 Figures[selected]->setColor(color);
                 list(selected);
                 
+            }
+
+        }
+        else {
+            cout << "You dont select shape" << endl;
+        }
+
+    }
+    void move(int x, int y) {
+        if (selected != -1) {
+            if (selected >= 0 && selected < Figures.size()) {
+                if (board.checkPos(x, y)) {
+                    board.reset();
+                    Figures[selected]->setPositon(x, y);
+                }
             }
 
         }
@@ -544,7 +577,7 @@ public:
             Square* square = dynamic_cast<Square*>(fig.get());
             Triangle* triangle = dynamic_cast<Triangle*>(fig.get());
             Rectangle* rectangle = dynamic_cast<Rectangle*>(fig.get());
-            auto coordinates = fig->positon();
+            auto coordinates = fig->getPositon();
             
             if (circle != nullptr) {
                 cout << "ID " << ID << " Circle radius " << circle->getRadius() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
@@ -586,7 +619,7 @@ public:
         Square* square = dynamic_cast<Square*>(fig.get());
         Triangle* triangle = dynamic_cast<Triangle*>(fig.get());
         Rectangle* rectangle = dynamic_cast<Rectangle*>(fig.get());
-        auto coordinates = fig->positon();
+        auto coordinates = fig->getPositon();
 
         if (circle != nullptr) {
             cout << "ID " << ID << " Circle radius " << circle->getRadius() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
@@ -661,7 +694,7 @@ public:
 
     void draw() {
         for (auto& fig : Figures) {
-            auto cords = fig->positon();
+            auto cords = fig->getPositon();
             board.placeShape(*fig, cords[0], cords[1]);
         }
         board.print();
