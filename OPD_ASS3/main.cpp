@@ -94,9 +94,6 @@ public:
         }
     }
 
-
-
-   
     int getHeigh() {
         return height;
     }
@@ -228,9 +225,6 @@ public:
         }
     }
 
-
-
-   
     int getRadius() {
         return rad;
     }
@@ -398,7 +392,7 @@ class CLI {
 public:
     Board board;
     vector<shared_ptr<Figure>> Figures;
-    int selected;
+    int selected = -1;
 
     void start() {
         while (1) {
@@ -432,6 +426,12 @@ public:
                     Figures.pop_back();
                     board.reset();
                 }
+            }
+            else if (command == "remove") {
+                remove();
+            }
+            else if (command == "paint") {
+                paint(input[1][0]);
             }
 
             else if (command == "clear") {
@@ -490,6 +490,33 @@ public:
         }
 
     }
+    void remove() {
+        if (selected != -1) {
+            if (selected >= 0 && selected < Figures.size()) {
+                list(selected);
+                cout << "removed" << endl;
+                Figures.erase(Figures.begin() + selected);
+            }
+
+        }  
+        else {
+            cout << "You dont select shape" << endl;
+        }
+    }
+    void paint(char color) {
+        if (selected != -1) {
+            if (selected >= 0 && selected < Figures.size()) {
+                Figures[selected]->setColor(color);
+                list(selected);
+                
+            }
+
+        }
+        else {
+            cout << "You dont select shape" << endl;
+        }
+
+    }
 
     void save() {
 
@@ -510,7 +537,7 @@ public:
         }
     }
 
-    void list() {
+    void list() { //change
         int ID = 0;
         for (auto& fig : Figures) {
             Circle* circle = dynamic_cast<Circle*>(fig.get());
@@ -550,6 +577,7 @@ public:
 
 
     }
+
 
     void list(int ID) {
 
