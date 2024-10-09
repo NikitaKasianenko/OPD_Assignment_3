@@ -6,6 +6,21 @@
 #include <fstream>
 #include <sstream>
 #include <memory>
+#define NOMINMAX
+#define NOGDI
+#include "Windows.h"
+#include "_WIN32.h"
+
+#define RESET   "\033[0m"   // Скидання кольору
+#define BLACK   "\033[30m"  // Чорний
+#define RED     "\033[31m"  // Червоний
+#define GREEN   "\033[32m"  // Зелений
+#define YELLOW  "\033[33m"  // Жовтий
+#define BLUE    "\033[34m"  // Синій
+#define MAGENTA "\033[35m"  // Магента
+#define CYAN    "\033[36m"  // Циан
+#define WHITE   "\033[37m"  // Білий
+#define GREY    "\033[90m"
 
 
 using namespace std;
@@ -394,7 +409,34 @@ struct Board {
         for (auto& row : grid) {
             cout << "|";
             for (char c : row) {
-                std::cout << c;
+                if (c == 'b') {
+                    cout << BLUE << c << RESET;
+                }
+                else if (c == 'r') {
+                    cout << RED << c << RESET;
+                }
+                else if (c == 'g') {
+                    cout << GREEN << c << RESET;
+                }
+                else if (c == 'y') {
+                    cout << YELLOW << c << RESET;
+                }
+                else if (c == 'm') {
+                    cout << MAGENTA << c << RESET;
+                }
+                else if (c == 'c') {
+                    cout << CYAN << c << RESET;
+                }
+                else if (c == 'w') {
+                    cout << WHITE << c << RESET;
+                }
+                else if (c == 's') {
+                    cout << GREY << c << RESET;
+                }
+                else {
+                    std::cout << c;
+                }
+                
             }
             cout << "|";
             std::cout << "\n";
@@ -543,7 +585,8 @@ public:
     void select(int x, int y) {
         if (board.checkGrid(x, y)) {
             int ID = 0;
-            for (auto& fig : Figures) {
+            for (int i = Figures.size() - 1; i >= 0; --i) { 
+                auto& fig = Figures[i];
                 vector<int> min_pos = fig->getPositon();
                 vector<int> max_pos = fig->getRange();
                 if (min_pos[0] <= x && x <= max_pos[0] && min_pos[1] <= y && y <= max_pos[1]) {
@@ -566,6 +609,7 @@ public:
                 cout << "removed" << endl;
                 Figures.erase(Figures.begin() + selected);
                 selected = UNSELECTED;
+                board.reset();
             }
 
         }
@@ -882,7 +926,7 @@ public:
     }
 
     void shapes() {
-        cout << "circle radius coordinates" << endl;
+        cout << "\033[34m" << "circle radius coordinates"<< "\033[0m" << endl;
         cout << "triangle heigh coordinates" << endl;
         cout << "square side / (wight, heigh) coordinates" << endl;
         cout << "rectangle heigh coordinates" << endl;
@@ -904,7 +948,7 @@ public:
         return row;
     }
 
-    bool sameShape(Figure& fig) {
+    bool sameShape(Figure& fig) { 
         for (auto& f : Figures) {
             if (*f == fig) {
                 return true;
@@ -915,6 +959,7 @@ public:
 };
 
 int main() {
+    enable_virtual_terminal_processing();
     CLI cli;
     cli.start();
     return 0;
