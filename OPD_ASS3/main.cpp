@@ -10,16 +10,16 @@
 #define NOGDI
 #include "Windows.h"
 #include "_WIN32.h"
+#include <unordered_map>
 
-#define RESET   "\033[0m"   // Скидання кольору
-#define BLACK   "\033[30m"  // Чорний
-#define RED     "\033[31m"  // Червоний
-#define GREEN   "\033[32m"  // Зелений
-#define YELLOW  "\033[33m"  // Жовтий
-#define BLUE    "\033[34m"  // Синій
-#define MAGENTA "\033[35m"  // Магента
-#define CYAN    "\033[36m"  // Циан
-#define WHITE   "\033[37m"  // Білий
+#define RESET   "\033[0m"   
+#define RED     "\033[31m"  
+#define GREEN   "\033[32m"  
+#define YELLOW  "\033[33m"  
+#define BLUE    "\033[34m"  
+#define MAGENTA "\033[35m"  
+#define CYAN    "\033[36m"  
+#define WHITE   "\033[37m"
 #define GREY    "\033[90m"
 
 
@@ -29,12 +29,36 @@ const int BOARD_WIDTH = 80;
 const int BOARD_HEIGHT = 25;
 const unsigned int UNSELECTED = std::numeric_limits<unsigned>::max();
 
+
+
 class Figure {
 public:
     virtual std::vector<std::vector<char>> draw() const = 0;
     virtual ~Figure() = default;
     virtual bool operator==(const Figure& other) const = 0;
     virtual void list() const = 0;
+
+    string whatColor(char color) const {
+        unordered_map<char, string> colorMap;
+
+        colorMap['r'] = "Red";
+        colorMap['g'] = "Green";
+        colorMap['y'] = "Yellow";
+        colorMap['b'] = "Blue";
+        colorMap['m'] = "Magenta";
+        colorMap['c'] = "Cyan";
+        colorMap['w'] = "White";
+        colorMap['s'] = "Grey";
+
+        auto it = colorMap.find(color);
+        if (it != colorMap.end()) {
+            return it->second; 
+        }
+        else {
+            return "Unknown Color";
+        }
+
+    }
 
     vector<int> getPositon() const {
         return coordinates;
@@ -75,14 +99,14 @@ public:
     bool operator==(const Figure& other) const override {
         const Triangle* otherTriangle = dynamic_cast<const Triangle*>(&other);
         if (otherTriangle) {
-            return (height == otherTriangle->height && coordinates[0] == otherTriangle->coordinates[0] && coordinates[1] == otherTriangle->coordinates[1]);
+            return (height == otherTriangle->height && coordinates[0] == otherTriangle->coordinates[0] && coordinates[1] == otherTriangle->coordinates[1] && fill == otherTriangle->fill && color == otherTriangle->color);
         }
         else {
             return false;
         }
     }
     void list() const override{
-        cout << "Triangle height " << getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+        cout << "Triangle height " << getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << " colour " << whatColor(color) <<endl;
     }
     
 
@@ -144,7 +168,7 @@ public:
     bool operator==(const Figure& other) const override {
         const Rectangle* otherRectangle = dynamic_cast<const Rectangle*>(&other);
         if (otherRectangle) {
-            return (height == otherRectangle->height && coordinates[0] == otherRectangle->coordinates[0] && coordinates[1] == otherRectangle->coordinates[1]);
+            return (height == otherRectangle->height && coordinates[0] == otherRectangle->coordinates[0] && coordinates[1] == otherRectangle->coordinates[1] && fill == otherRectangle->fill && color == otherRectangle->color);
         }
         else {
             return false;
@@ -152,7 +176,7 @@ public:
     }
 
     void list() const override {
-        cout  << "Rectangle side " << getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+        cout  << "Rectangle side " << getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] <<" color " << whatColor(color) << endl;
     }
 
     std::vector<std::vector<char>> draw() const override {
@@ -222,7 +246,7 @@ public:
     bool operator==(const Figure& other) const override {
         const Circle* otherCircle = dynamic_cast<const Circle*>(&other);
         if (otherCircle) {
-            return (rad == otherCircle->rad && coordinates[0] == otherCircle->coordinates[0] && coordinates[1] == otherCircle->coordinates[1]);
+            return (rad == otherCircle->rad && coordinates[0] == otherCircle->coordinates[0] && coordinates[1] == otherCircle->coordinates[1] && fill == otherCircle->fill && color == otherCircle->color);
         }
         else {
             return false;
@@ -230,7 +254,7 @@ public:
     }
 
     void list() const override {
-        cout << "Circle radius " << getRadius() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+        cout << "Circle radius " << getRadius() << " coordanates " << coordinates[0] << " " << coordinates[1] << " colour " << whatColor(color) << endl;
 
     }
 
@@ -301,7 +325,7 @@ public:
         const Square* otherSquare = dynamic_cast<const Square*>(&other);
         if (otherSquare) {
             if (side != 0) {
-                return (coordinates[0] == otherSquare->coordinates[0] && coordinates[1] == otherSquare->coordinates[1] && side == otherSquare->side);
+                return (coordinates[0] == otherSquare->coordinates[0] && coordinates[1] == otherSquare->coordinates[1] && side == otherSquare->side && fill == otherSquare->fill && color == otherSquare->color);
             }
             else {
                 return (height == otherSquare->height && coordinates[0] == otherSquare->coordinates[0] && coordinates[1] == otherSquare->coordinates[1] && width == otherSquare->width);
@@ -325,11 +349,11 @@ public:
     void list() const override {
 
         if (getSide() != 0) {
-            cout << "Square side " << getSide() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+            cout << "Square side " << getSide() << " coordanates " << coordinates[0] << " " << coordinates[1] << " colour " << whatColor(color) << endl;
         }
         else
         {
-            cout << "Square sides " << getSides() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+            cout << "Square sides " << getSides() << " coordanates " << coordinates[0] << " " << coordinates[1] << " colour " << whatColor(color) << endl;
         }
     }
 
@@ -501,6 +525,7 @@ public:
     unsigned int selected = UNSELECTED;
 
     void start() {
+        help();
         while (1) {
             auto input = user_input();
             if (input.empty()) continue;
@@ -832,9 +857,7 @@ public:
 
 
             for (char c : line) {
-                if (c == ' ' || c == '*') { //change !!!!!!!!
-                    row.push_back(c);
-                }
+                row.push_back(c);
             }
 
             grid.push_back(row);
@@ -926,10 +949,23 @@ public:
     }
 
     void shapes() {
-        cout << "\033[34m" << "circle radius coordinates"<< "\033[0m" << endl;
+        cout << "circle radius coordinates"<<  endl;
         cout << "triangle heigh coordinates" << endl;
         cout << "square side / (wight, heigh) coordinates" << endl;
         cout << "rectangle heigh coordinates" << endl;
+    }
+    void help() {
+        cout << "enter a color just with their first letter" << endl;
+        cout << "enable colour" << endl;
+        cout << "r  - Red" << endl;
+        cout << "g  - Green" <<endl;
+        cout << "y  - Yellow" << endl;
+        cout << "b  - Blue" << endl;
+        cout << "m  - Magenta" << endl;
+        cout << "c  - Cyan" << endl;
+        cout << "w  - White" << endl;
+        cout << "s  - Grey" << endl;
+       
     }
 
     vector<string> user_input() {
@@ -948,7 +984,7 @@ public:
         return row;
     }
 
-    bool sameShape(Figure& fig) { 
+    bool sameShape(Figure& fig) {
         for (auto& f : Figures) {
             if (*f == fig) {
                 return true;
