@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <limits>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -11,12 +12,14 @@ using namespace std;
 
 const int BOARD_WIDTH = 80;
 const int BOARD_HEIGHT = 25;
+const unsigned int UNSELECTED = std::numeric_limits<unsigned>::max();
 
 class Figure {
 public:
     virtual std::vector<std::vector<char>> draw() const = 0;
     virtual ~Figure() = default;
     virtual bool operator==(const Figure& other) const = 0;
+    virtual void list() const = 0;
 
     vector<int> getPositon() const {
         return coordinates;
@@ -63,6 +66,10 @@ public:
             return false;
         }
     }
+    void list() const override{
+        cout << "Triangle height " << getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+    }
+    
 
     std::vector<std::vector<char>> draw() const override {
         std::vector<std::vector<char>> triangle(height, std::vector<char>(2 * height - 1, ' '));
@@ -99,8 +106,11 @@ public:
         }
     }
 
-    int getHeigh() {
+    int getHeigh() const {
         return height;
+    }
+    void setHeigh(int new_hight) {
+        height = new_hight;
     }
 };
 
@@ -124,6 +134,10 @@ public:
         else {
             return false;
         }
+    }
+
+    void list() const override {
+        cout  << "Rectangle side " << getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
     }
 
     std::vector<std::vector<char>> draw() const override {
@@ -168,11 +182,12 @@ public:
         return triangle;
     }
 
-
-
-    
-    int getHeigh() {
+    int getHeigh() const {
         return height;
+    }
+
+    void setHeigh(int new_hight) {
+        height = new_hight;
     }
 };
 
@@ -197,6 +212,11 @@ public:
         else {
             return false;
         }
+    }
+
+    void list() const override {
+        cout << "Circle radius " << getRadius() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+
     }
 
     std::vector<std::vector<char>> draw() const override {
@@ -230,10 +250,14 @@ public:
         }
     }
 
-    int getRadius() {
+    int getRadius() const {
         return rad;
     }
-};
+
+    void setRadius(int new_rad) {
+        rad = new_rad;
+    }
+}; 
 
 class Square : public Figure {
 private:
@@ -271,6 +295,27 @@ public:
 
         }
         return false;
+    }
+
+    void setSide(int new_side) {
+        side = new_side;
+    }
+
+    void setSides(int new_width, int new_height) {
+        width = new_width;
+        height = new_height;
+    }
+
+
+    void list() const override {
+
+        if (getSide() != 0) {
+            cout << "Square side " << getSide() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+        }
+        else
+        {
+            cout << "Square sides " << getSides() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
+        }
     }
 
     std::vector<std::vector<char>> draw() const override {
@@ -322,15 +367,22 @@ public:
     }
 
 
-
-    
-    int getSide() {
+    int getSide() const {
         return side;
     }
 
-    string getSides() {
+    string getSides() const {
         return to_string(height) + " " + to_string(width);
     }
+
+    vector<int> getSides_int() const {
+        vector<int> sides;
+        sides.push_back(height);
+        sides.push_back(width);
+        return sides;
+    }
+
+
 };
 
 struct Board {
@@ -404,7 +456,7 @@ class CLI {
 public:
     Board board;
     vector<shared_ptr<Figure>> Figures;
-    int selected = -1;
+    unsigned int selected = UNSELECTED;
 
     void start() {
         while (1) {
@@ -443,12 +495,14 @@ public:
                 remove();
             }
             else if (command == "paint") {
-                paint(input[1][0]);
+                paint(input);
             }
             else if (command == "move") {
                 move(stoi(input[1]),stoi(input[2]));
             }
-
+            else if (command == "edit") {
+                edit(input);
+            }
             else if (command == "clear") {
                 clear();
             }
@@ -506,11 +560,12 @@ public:
 
     }
     void remove() {
-        if (selected != -1) {
+        if (selected != UNSELECTED) {
             if (selected >= 0 && selected < Figures.size()) {
                 list(selected);
                 cout << "removed" << endl;
                 Figures.erase(Figures.begin() + selected);
+                selected = UNSELECTED;
             }
 
         }
@@ -521,14 +576,18 @@ public:
 
     
 
-    void paint(char color) {
-        if (selected != -1) {
+    void paint(vector<string> input) {
+        if (selected != UNSELECTED) {
+            if (input.size() != 2) {
+                cout << "Incorrect amout of arguments" << endl;
+                return;
+            }
+            char colour = input[1][0];
             if (selected >= 0 && selected < Figures.size()) {
-                Figures[selected]->setColor(color);
+                Figures[selected]->setColor(colour);
                 list(selected);
                 
             }
-
         }
         else {
             cout << "You dont select shape" << endl;
@@ -536,7 +595,7 @@ public:
 
     }
     void move(int x, int y) {
-        if (selected != -1) {
+        if (selected != UNSELECTED) {
             if (selected >= 0 && selected < Figures.size()) {
                 if (board.checkPos(x, y)) {
                     board.reset();
@@ -549,6 +608,131 @@ public:
             cout << "You dont select shape" << endl;
         }
 
+    }
+
+    void edit(vector<string> input) {
+        if (input.size() < 2) {
+            cout << "Incorrect amount of arguments" << endl;
+        }
+        else {
+            if (selected != UNSELECTED) {
+                if (selected >= 0 && selected < Figures.size()) {
+                    auto fig = Figures[selected];
+                    Circle* circle = dynamic_cast<Circle*>(fig.get());
+                    Square* square = dynamic_cast<Square*>(fig.get());
+                    Triangle* triangle = dynamic_cast<Triangle*>(fig.get());
+                    Rectangle* rectangle = dynamic_cast<Rectangle*>(fig.get());
+
+                    int newValue = stoi(input[1]);
+                    vector<int> range;
+
+                    if (newValue <= 0) {
+                        cout << "Incorect value" << endl;
+                        return;
+                    }
+                    if (circle) {
+                        range = circle->getRange();
+                        if (newValue > circle->getRadius()) {
+                            if (board.checkPos(range[0] + newValue - 1, range[1] + newValue - 1)) {
+                                circle->setRadius(newValue);
+                                board.reset();
+                            }
+                            else {
+                                cout << "error: shape will go out of the board" << endl;
+                            }
+                        }
+                        else {
+                            circle->setRadius(newValue);
+                            board.reset();
+                        }
+                       
+                    }
+                    if (square) {
+                        if (input.size() == 3 && square->getSide() == 0) {
+                            int newWidht = stoi(input[1]);
+                            int newHeigh = stoi(input[2]);
+                            if (newWidht <= 0 || newHeigh <= 0) {
+                                cout << "Incorect value" << endl;
+                                return;
+                            }
+                            auto sides = square->getSides_int();
+                            range = square->getPositon();
+                            if (newWidht > sides[1] || newHeigh > sides[0]) {
+                                if (board.checkPos(range[0] + newHeigh - 1, range[1] + newWidht - 1)) {
+                                    square->setSides(newWidht, newHeigh);
+                                    board.reset();
+                                }
+                                else {
+                                    cout << "error: shape will go out of the board" << endl;
+                                }
+                            }
+                            else {
+                                square->setSides(newWidht, newHeigh);
+                                board.reset();
+                            }
+
+                        }
+                        if (input.size() == 2 && square->getSide() != 0) {
+                            range = square->getPositon();
+                            if (newValue > square->getSide()) {
+                                if (board.checkPos(range[0] + newValue - 1, range[1] + newValue - 1)) {
+                                    square->setSide(newValue);
+                                    board.reset();
+                                }
+                                else {
+                                    cout << "error: shape will go out of the board" << endl;
+                                }
+                            }
+                            else {
+                                square->setSide(newValue);
+                                board.reset();
+                            }
+
+                        }
+                        
+
+                    }
+                    if (triangle) {
+                        range = triangle->getPositon();
+                        if (newValue > triangle->getHeigh()) {
+                            if (board.checkPos(range[0] + newValue - 1, range[1] + newValue - 1)) {
+                                triangle->setHeigh(newValue);
+                                board.reset();
+                            }
+                            else {
+                                cout << "error: shape will go out of the board" << endl;
+                            }
+                        }
+                        else {
+                            triangle->setHeigh(newValue);
+                            board.reset();
+                        }
+
+                    }
+                    if (rectangle) {
+                        range = rectangle->getPositon();
+                        if (newValue > rectangle->getHeigh()) {
+                            if (board.checkPos(range[0] + newValue - 1, range[1] + newValue - 1)) {
+                                rectangle->setHeigh(newValue);
+                                board.reset();
+                            }
+                            else {
+                                cout << "error: shape will go out of the board" << endl;
+                            }
+                        }
+                        else {
+                            rectangle->setHeigh(newValue);
+                            board.reset();
+                        }
+
+                    }
+                }
+            }
+            else {
+                cout << "You dont select shape" << endl;
+            }
+        }
+        
     }
 
     void save() {
@@ -570,81 +754,17 @@ public:
         }
     }
 
-    void list() { //change
+    void list() {
         int ID = 0;
         for (auto& fig : Figures) {
-            Circle* circle = dynamic_cast<Circle*>(fig.get());
-            Square* square = dynamic_cast<Square*>(fig.get());
-            Triangle* triangle = dynamic_cast<Triangle*>(fig.get());
-            Rectangle* rectangle = dynamic_cast<Rectangle*>(fig.get());
-            auto coordinates = fig->getPositon();
-            
-            if (circle != nullptr) {
-                cout << "ID " << ID << " Circle radius " << circle->getRadius() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
-
-            }
-
-            if (square != nullptr) {
-                if (square->getSide() != 0) {
-                    cout << "ID " << ID << " Square side " << square->getSide() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
-                }
-                else
-                {
-                    cout << "ID " << ID << " Square sides " << square->getSides() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
-                }
-
-            }
-            if (triangle != nullptr) {
-                cout << "ID " << ID << " Triangle height " << triangle->getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
-
-            }
-            if (rectangle != nullptr) {
-                cout << "ID " << ID << " Rectangle side " << triangle->getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
-
-            }
-
-
+            cout << "ID " << ID << ": ";
+            fig->list();
             ID++;
-
         }
-
-
     }
 
-
     void list(int ID) {
-
-        auto fig = Figures[ID];
-        Circle* circle = dynamic_cast<Circle*>(fig.get());
-        Square* square = dynamic_cast<Square*>(fig.get());
-        Triangle* triangle = dynamic_cast<Triangle*>(fig.get());
-        Rectangle* rectangle = dynamic_cast<Rectangle*>(fig.get());
-        auto coordinates = fig->getPositon();
-
-        if (circle != nullptr) {
-            cout << "ID " << ID << " Circle radius " << circle->getRadius() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
-
-        }
-
-        if (square != nullptr) {
-            if (square->getSide() != 0) {
-                cout << "ID " << ID << " Square side " << square->getSide() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
-            }
-            else
-            {
-                cout << "ID " << ID << " Square sides " << square->getSides() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
-            }
-
-        }
-        if (triangle != nullptr) {
-            cout << "ID " << ID << " Triangle height " << triangle->getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
-
-        }
-        if (rectangle != nullptr) {
-            cout << "ID " << ID << " Rectangle side " << triangle->getHeigh() << " coordanates " << coordinates[0] << " " << coordinates[1] << endl;
-
-        }
-    
+        Figures[ID]->list();
     }
 
     void load() {
