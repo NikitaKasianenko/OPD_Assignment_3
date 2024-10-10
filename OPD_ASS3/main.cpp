@@ -9,7 +9,6 @@
 #define NOMINMAX
 #define NOGDI
 #include "Windows.h"
-#include "_WIN32.h"
 #include <unordered_map>
 
 #define RESET   "\033[0m"   
@@ -565,9 +564,19 @@ public:
                 paint(input);
             }
             else if (command == "move") {
-                move(stoi(input[1]),stoi(input[2]));
+                if (input.size() != 3) {
+                    cout << "Incorrect amount of arguments" << endl;
+                    
+                }
+                else {
+                    move(stoi(input[1]), stoi(input[2]));
+                }
             }
             else if (command == "edit") {
+                if (input.size() != 2) {
+                    cout << "Incorrect amount of arguments" << endl;
+                    return;
+                }
                 edit(input);
             }
             else if (command == "clear") {
@@ -887,11 +896,19 @@ public:
         board.print();
     }
     void add(vector<string> input) {
+        if (input.size() < 4) {
+            cout << "Incorrect amount of arguments" << endl;
+            return;
+        }
         shared_ptr<Figure> newFigure = nullptr;
         bool fill = (input[1] == "fill") ? true : false;
         char color = input[2][0];
 
         if (input[3] == "circle") {
+            if (input.size() < 7) {
+                cout << "Incorrect amount of arguments" << endl;
+                return;
+            }
             int rad = stoi(input[4]);
             int x = stoi(input[5]);
             int y = stoi(input[6]);
@@ -901,6 +918,10 @@ public:
 
         }
         else if (input[3] == "triangle") {
+            if (input.size() < 7) {
+                cout << "Incorrect amount of arguments" << endl;
+                return;
+            }
             int height = stoi(input[4]);
             int x = stoi(input[5]);
             int y = stoi(input[6]);
@@ -924,10 +945,17 @@ public:
 
                 newFigure = (make_shared<Square>(fill, color, side, x, y));
             }
+            else {
+                cout << "Incorrect amount of arguments" << endl;
+            }
 
         }
 
         else if (input[3] == "rectangle") {
+            if (input.size() < 7) {
+                cout << "Incorrect amount of arguments" << endl;
+                return;
+            }
             int side = stoi(input[4]);
             int x = stoi(input[5]);
             int y = stoi(input[6]);
@@ -944,8 +972,6 @@ public:
             }
 
         }
-
-
     }
 
     void shapes() {
@@ -995,7 +1021,6 @@ public:
 };
 
 int main() {
-    enable_virtual_terminal_processing();
     CLI cli;
     cli.start();
     return 0;
