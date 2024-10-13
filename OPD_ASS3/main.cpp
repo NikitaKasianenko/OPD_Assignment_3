@@ -573,11 +573,7 @@ public:
                 }
             }
             else if (command == "edit") {
-                if (input.size() != 2) {
-                    cout << "Incorrect amount of arguments" << endl;
-                    return;
-                }
-                edit(input);
+                 edit(input);
             }
             else if (command == "clear") {
                 clear();
@@ -681,6 +677,9 @@ public:
                     board.reset();
                     Figures[selected]->setPositon(x, y);
                 }
+                else {
+                    cout << "Shape will go out off the grip" << endl;
+                }
             }
 
         }
@@ -691,7 +690,7 @@ public:
     }
 
     void edit(vector<string> input) {
-        if (input.size() < 2) {
+        if (input.size() < 3) {
             cout << "Incorrect amount of arguments" << endl;
         }
         else {
