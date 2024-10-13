@@ -327,7 +327,7 @@ public:
                 return (coordinates[0] == otherSquare->coordinates[0] && coordinates[1] == otherSquare->coordinates[1] && side == otherSquare->side && fill == otherSquare->fill && color == otherSquare->color);
             }
             else {
-                return (height == otherSquare->height && coordinates[0] == otherSquare->coordinates[0] && coordinates[1] == otherSquare->coordinates[1] && width == otherSquare->width);
+                return (height == otherSquare->height && coordinates[0] == otherSquare->coordinates[0] && coordinates[1] == otherSquare->coordinates[1] && width == otherSquare->width && fill == otherSquare->fill && color == otherSquare->color);
 
             }
 
@@ -619,8 +619,8 @@ public:
     void select(int x, int y) {
         if (board.checkGrid(x, y)) {
             int ID = 0;
-            for (int i = Figures.size() - 1; i >= 0; --i) { 
-                auto& fig = Figures[i];
+            reverse(Figures.begin(), Figures.end());
+            for (auto& fig : Figures) {
                 vector<int> min_pos = fig->getPositon();
                 vector<int> max_pos = fig->getRange();
                 if (min_pos[0] <= x && x <= max_pos[0] && min_pos[1] <= y && y <= max_pos[1]) {
@@ -630,6 +630,8 @@ public:
                 }
                 ID++;
             }
+            reverse(Figures.begin(), Figures.end());
+
         }
         else {
             cout << "shape was not found" << endl;
